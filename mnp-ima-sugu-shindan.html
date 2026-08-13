@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>あなたの乗り換え診断｜削減額＆キャッシュバックシミュレーション</title>
+<style>
+  :root{
+    --navy:#0B1B33;
+    --blue:#1857FF;
+    --blue-deep:#0C3FCB;
+    --sky:#EAF1FF;
+    --sky-2:#D6E4FF;
+    --white:#FFFFFF;
+    --gray:#5B6B85;
+    --red:#FF4D5E;
+    --amber:#FFA43D;
+    --green:#12B76A;
+    --shadow: 0 10px 30px rgba(24,87,255,0.12);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, var(--sky) 0%, var(--white) 55%),
+      var(--white);
+    color:var(--navy);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:520px;margin:0 auto;padding:28px 20px 60px;}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:12px;font-weight:700;letter-spacing:.08em;
+    color:var(--blue-deep);background:var(--sky-2);
+    padding:6px 12px;border-radius:999px;
+  }
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--blue);animation:pulse 1.6s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+  h1{font-size:24px;line-height:1.4;margin:14px 0 6px;font-weight:800;letter-spacing:-.01em;}
+  .sub{color:var(--gray);font-size:13.5px;line-height:1.7;margin-bottom:24px;}
+  .card{
+    background:var(--white);border:1px solid var(--sky-2);border-radius:20px;
+    box-shadow:var(--shadow);padding:26px 22px;position:relative;overflow:hidden;
+  }
+  .meterbar{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+  .meterbar .track{flex:1;height:6px;background:var(--sky-2);border-radius:999px;overflow:hidden;}
+  .meterbar .fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--blue-deep));width:0%;transition:width .4s cubic-bezier(.2,.8,.2,1);}
+  .meterbar .step-label{font-size:11.5px;font-weight:700;color:var(--blue-deep);white-space:nowrap;}
+  .section-tag{
+    display:inline-block;font-size:11px;font-weight:800;color:var(--white);
+    background:var(--blue);padding:3px 10px;border-radius:999px;margin-bottom:10px;
+  }
+  .qnum{font-size:12px;font-weight:800;color:var(--blue);letter-spacing:.06em;margin-bottom:8px;}
+  .qtext{font-size:17px;font-weight:800;line-height:1.5;margin-bottom:18px;}
+  .options{display:flex;flex-direction:column;gap:10px;}
+  .opt{
+    text-align:left;border:1.5px solid var(--sky-2);background:var(--sky);border-radius:14px;
+    padding:14px 16px;font-size:14px;font-weight:600;color:var(--navy);cursor:pointer;
+    transition:all .15s ease;line-height:1.5;
+  }
+  .opt:hover{border-color:var(--blue);background:var(--white);transform:translateY(-1px);}
+  .opt:active{transform:translateY(0);}
+  .navrow{display:flex;justify-content:space-between;align-items:center;margin-top:20px;}
+  .backbtn{background:none;border:none;color:var(--gray);font-size:13px;font-weight:700;cursor:pointer;padding:8px 4px;}
+  .backbtn:disabled{opacity:0;pointer-events:none;}
+
+  .gauge-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:8px;}
+  .gauge-num{font-size:40px;font-weight:900;color:var(--navy);margin-top:-58px;letter-spacing:-.02em;}
+  .gauge-num span{font-size:16px;font-weight:800;color:var(--gray);}
+  .rank-badge{
+    display:inline-block;padding:6px 16px;border-radius:999px;font-weight:800;
+    font-size:13px;color:var(--white);margin:10px 0 6px;letter-spacing:.03em;
+  }
+  .rank-title{font-size:20px;font-weight:900;text-align:center;margin-bottom:10px;line-height:1.5;}
+  .rank-desc{font-size:13.5px;line-height:1.8;color:var(--navy);text-align:center;margin-bottom:22px;}
+
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+  .stat-box{background:var(--sky);border-radius:14px;padding:16px 12px;text-align:center;}
+  .stat-box .label{font-size:11px;color:var(--gray);font-weight:700;margin-bottom:6px;}
+  .stat-box .value{font-size:20px;font-weight:900;color:var(--blue-deep);}
+  .stat-box .value small{font-size:11.5px;font-weight:700;}
+  .stat-total{
+    background:linear-gradient(135deg,var(--blue),var(--blue-deep));
+    border-radius:14px;padding:18px 14px;text-align:center;margin:12px 0 22px;color:var(--white);
+  }
+  .stat-total .label{font-size:12px;font-weight:700;opacity:.85;margin-bottom:6px;}
+  .stat-total .value{font-size:30px;font-weight:900;}
+  .stat-total .value small{font-size:14px;font-weight:700;}
+
+  .breakdown{margin-bottom:22px;}
+  .breakdown-title{font-size:13px;font-weight:800;color:var(--gray);margin-bottom:10px;}
+  .bd-item{
+    display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.6;
+    padding:10px 0;border-top:1px solid var(--sky-2);
+  }
+  .bd-item .ico{
+    flex:0 0 auto;width:22px;height:22px;border-radius:7px;background:var(--sky-2);
+    color:var(--blue-deep);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;
+  }
+
+  .cta{
+    display:block;text-align:center;text-decoration:none;
+    background:linear-gradient(135deg,var(--blue),var(--blue-deep));color:var(--white);
+    font-weight:800;font-size:15px;padding:16px;border-radius:14px;
+    box-shadow:0 8px 20px rgba(24,87,255,0.3);margin-bottom:10px;
+  }
+  .cta-sub{text-align:center;font-size:11.5px;color:var(--gray);line-height:1.7;}
+  .restart{
+    display:block;margin:18px auto 0;background:none;border:none;color:var(--gray);
+    font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer;
+  }
+  .intro-list{list-style:none;padding:0;margin:0 0 22px;}
+  .intro-list li{
+    display:flex;gap:10px;font-size:13px;line-height:1.6;color:var(--navy);
+    padding:10px 0;border-top:1px solid var(--sky-2);
+  }
+  .intro-list li:first-child{border-top:none;}
+  .intro-list .num{
+    flex:0 0 auto;width:20px;height:20px;border-radius:6px;background:var(--blue);
+    color:var(--white);font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;
+  }
+  .startbtn{
+    width:100%;border:none;background:linear-gradient(135deg,var(--blue),var(--blue-deep));
+    color:var(--white);font-weight:800;font-size:16px;padding:16px;border-radius:14px;
+    cursor:pointer;box-shadow:0 8px 20px rgba(24,87,255,0.3);
+  }
+  .footer-note{text-align:center;color:var(--gray);font-size:11px;margin-top:18px;line-height:1.7;}
+  .urgency-strip{
+    background:var(--sky);border-radius:12px;padding:12px 14px;font-size:12.5px;
+    line-height:1.7;color:var(--navy);margin-bottom:20px;border-left:4px solid var(--blue);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <span class="eyebrow"><span class="dot"></span>やっぴ〜Presents</span>
+  <h1>あなたの乗り換え診断<br>削減額＆キャッシュバック丸わかり</h1>
+  <p class="sub">全22問、選ぶだけ。今のキャリア・使い方・家族構成から、乗り換えでどれだけ得するかをシミュレーションします。</p>
+
+  <div class="card" id="card"></div>
+
+  <p class="footer-note">※ 金額は入力内容から算出した目安です。実際のキャッシュバック額・料金は時期やキャンペーン内容により変動します。</p>
+</div>
+
+<script>
+const sections = ["現在の契約","使い方","家族構成","セット割","費用感","本気度"];
+
+const questions = [
+  // --- 現在の契約 (0-3) ---
+  {sec:0, q:"今使ってるキャリアは？", key:"carrier",
+    opts:[
+      {t:"docomo／au／SoftBankの通常プラン", p:3, tag:"big"},
+      {t:"大手のオンライン専用プラン（ahamo／povo／LINEMOなど）", p:1, tag:"online"},
+      {t:"サブブランド（UQ mobile／Y!mobile）", p:1, tag:"sub"},
+      {t:"格安SIM（それ以外のMVNO）", p:0, tag:"mvno"},
+    ]},
+  {sec:0, q:"契約してからどれくらい経つ？",
+    opts:[{t:"1年以内",p:0},{t:"1〜2年",p:1},{t:"2〜4年",p:2},{t:"4年以上（正直覚えてない）",p:3}]},
+  {sec:0, q:"契約時のキャンペーン割引、今も続いてる？",
+    opts:[{t:"まだ続いていると思う",p:0},{t:"半分くらい終わってそう",p:2},{t:"もう終わっていると思う",p:3},{t:"覚えてない",p:2}]},
+  {sec:0, q:"今の契約、正直「損してるかも」と思ったことある？",
+    opts:[{t:"頻繁にある",p:3},{t:"たまにある",p:2},{t:"あまりない",p:1},{t:"ない",p:0}]},
+
+  // --- 使い方 (4-9) ---
+  {sec:1, q:"毎月のデータ使用量はどのくらい？", key:"data",
+    opts:[
+      {t:"〜3GB（ほぼWi-Fi）",p:0,tag:"low"},
+      {t:"3〜10GB",p:1,tag:"mid"},
+      {t:"10〜20GB",p:2,tag:"high"},
+      {t:"20GB以上／無制限じゃないと不安",p:3,tag:"veryhigh"},
+    ]},
+  {sec:1, q:"通話はどのくらい必要？", key:"call",
+    opts:[
+      {t:"ほぼしない（LINE通話で十分）",p:0,tag:"none"},
+      {t:"たまに（1回5分以内が多い）",p:1,tag:"short"},
+      {t:"よく話す",p:2,tag:"unlimited"},
+      {t:"仕事で長電話が多い",p:3,tag:"unlimited"},
+    ]},
+  {sec:1, q:"1日にスマホをどのくらい使ってる？",
+    opts:[{t:"1時間未満",p:0},{t:"1〜3時間",p:1},{t:"3〜6時間",p:2},{t:"6時間以上",p:3}]},
+  {sec:1, q:"自宅・職場のWi-Fi環境は整ってる？",
+    opts:[{t:"常にWi-Fiがある",p:0},{t:"半分くらいはWi-Fi",p:1},{t:"ほぼモバイル回線",p:2},{t:"外出が多くてほぼ外",p:3}]},
+  {sec:1, q:"端末（本体）は今どんな状態？",
+    opts:[{t:"分割払い中（残債あり）",p:2},{t:"一括購入済み",p:0},{t:"型落ちをそのまま使ってる",p:1},{t:"SIMフリー端末を持ち込み",p:0}]},
+  {sec:1, q:"乗り換えで一番不安なことは？",
+    opts:[{t:"手続きの手間",p:1},{t:"LINEなどのデータ引き継ぎ",p:1},{t:"電話番号が変わりそう",p:2},{t:"特に不安はない",p:0}]},
+
+  // --- 家族構成 (10-13) ---
+  {sec:2, q:"家族は何人？（自分含む）", key:"family",
+    opts:[{t:"自分だけ",p:0,tag:"1"},{t:"2人",p:1,tag:"2"},{t:"3〜4人",p:2,tag:"3"},{t:"5人以上",p:3,tag:"5"}]},
+  {sec:2, q:"家族は同じキャリアを使ってる？",
+    opts:[{t:"全員同じキャリア",p:0},{t:"一部だけ違う",p:1},{t:"バラバラ",p:2},{t:"自分しか使ってない",p:0}]},
+  {sec:2, q:"家族割は使えてる？",
+    opts:[{t:"フル活用している",p:0},{t:"一部だけ使っている",p:1},{t:"使ってない気がする",p:2},{t:"対象か分からない",p:3}]},
+  {sec:2, q:"家族の中に学生・シニア（割引対象）はいる？",
+    opts:[{t:"いる（対象の割引は使えてる）",p:0},{t:"いる（でも割引は未確認）",p:2},{t:"いない",p:0},{t:"分からない",p:1}]},
+
+  // --- セット割 (14-16) ---
+  {sec:3, q:"自宅のネット回線とスマホはセットになってる？", key:"netset",
+    opts:[{t:"セット割を適用中",p:0,tag:"set"},{t:"契約はあるけど未セット",p:2,tag:"unset"},{t:"自宅にネット回線がない",p:1,tag:"none"},{t:"分からない",p:2,tag:"unknown"}]},
+  {sec:3, q:"電気・ガスとスマホのセット割は使ってる？", key:"energyset",
+    opts:[{t:"使ってる",p:0,tag:"set"},{t:"検討したことがない",p:2,tag:"unset"},{t:"対象外だと思う",p:1,tag:"none"},{t:"分からない",p:2,tag:"unknown"}]},
+  {sec:3, q:"クレジットカード払い・ポイント還元は活用できてる？",
+    opts:[{t:"かなり活用できてる",p:0},{t:"少しだけ",p:1},{t:"あまりしてない",p:2},{t:"何も意識してない",p:3}]},
+
+  // --- 費用感 (17-19) ---
+  {sec:4, q:"毎月のスマホ代（本体代抜き）はどのくらい？", key:"bill",
+    opts:[
+      {t:"〜3,000円",p:0,mid:2000},
+      {t:"3,000〜6,000円",p:1,mid:4500},
+      {t:"6,000〜9,000円",p:2,mid:7500},
+      {t:"9,000円以上",p:3,mid:10500},
+    ]},
+  {sec:4, q:"最後にプランを見直したのはいつ？",
+    opts:[{t:"半年以内",p:0},{t:"1年以内",p:1},{t:"2〜3年前",p:2},{t:"見直した記憶がない",p:3}]},
+  {sec:4, q:"「面倒だから」で見直しを後回しにしてる？",
+    opts:[{t:"していない",p:0},{t:"少し後回しにしてる",p:1},{t:"かなり後回しにしてる",p:2},{t:"完全に放置してる",p:3}]},
+
+  // --- 本気度 (20-21) ---
+  {sec:5, q:"MNP（乗り換え）をしたことある？",
+    opts:[{t:"2回以上ある",p:0},{t:"1回ある",p:1},{t:"検討したことはある",p:2},{t:"一度もない",p:3}]},
+  {sec:5, q:"キャッシュバック・特典への興味は？",
+    opts:[{t:"かなりある",p:0},{t:"少しある",p:1},{t:"あまりない",p:2},{t:"分からない",p:1}]},
+  {sec:5, q:"いつ頃までに動きたい？",
+    opts:[{t:"今すぐ",p:0},{t:"1ヶ月以内",p:1},{t:"数ヶ月以内",p:2},{t:"まだ未定",p:3}]},
+];
+
+let current = 0;
+let answers = [];
+const facts = { billMid:6000, dataTag:"mid", callTag:"short", familyTag:"1", netsetTag:"unset", energysetTag:"unset", carrierTag:"online" };
+
+const card = document.getElementById('card');
+
+function renderIntro(){
+  card.innerHTML = `
+    <ul class="intro-list">
+      <li><span class="num">1</span>全22問、直感で選ぶだけ（所要3分）</li>
+      <li><span class="num">2</span>キャリア・使い方・家族構成・セット割まで丸ごと診断</li>
+      <li><span class="num">3</span>乗り換えた場合の削減額とキャッシュバック目安が分かる</li>
+    </ul>
+    <button class="startbtn" onclick="startQuiz()">診断をはじめる →</button>
+  `;
+}
+
+function startQuiz(){ current = 0; answers = []; renderQuestion(); }
+
+function renderQuestion(){
+  const total = questions.length;
+  const progressPct = Math.round((current/total)*100);
+  const item = questions[current];
+
+  const optsHtml = item.opts.map((o,i)=>`<button class="opt" onclick="selectOpt(${i})">${o.t}</button>`).join('');
+
+  card.innerHTML = `
+    <div class="meterbar">
+      <div class="track"><div class="fill" style="width:${progressPct}%"></div></div>
+      <div class="step-label">${current+1} / ${total}</div>
+    </div>
+    <span class="section-tag">${sections[item.sec]}</span>
+    <div class="qnum">Q${current+1}</div>
+    <div class="qtext">${item.q}</div>
+    <div class="options">${optsHtml}</div>
+    <div class="navrow">
+      <button class="backbtn" onclick="goBack()" ${current===0?'disabled':''}>← ひとつ前へ</button>
+    </div>
+  `;
+}
+
+function selectOpt(i){
+  const item = questions[current];
+  const chosen = item.opts[i];
+  answers[current] = chosen;
+
+  if(item.key === "bill") facts.billMid = chosen.mid;
+  if(item.key === "data") facts.dataTag = chosen.tag;
+  if(item.key === "call") facts.callTag = chosen.tag;
+  if(item.key === "family") facts.familyTag = chosen.tag;
+  if(item.key === "netset") facts.netsetTag = chosen.tag;
+  if(item.key === "energyset") facts.energysetTag = chosen.tag;
+  if(item.key === "carrier") facts.carrierTag = chosen.tag;
+
+  if(current < questions.length - 1){ current++; renderQuestion(); }
+  else { renderResult(); }
+}
+
+function goBack(){ if(current>0){ current--; renderQuestion(); } }
+
+function calcTargetPlan(){
+  const dataBase = {low:990, mid:1980, high:2970, veryhigh:3980};
+  const callAdd = {none:0, short:500, unlimited:1600};
+  let base = dataBase[facts.dataTag] ?? 1980;
+  base += callAdd[facts.callTag] ?? 500;
+
+  // 家族割の余地
+  const familyAdjust = {"1":0,"2":300,"3":500,"5":700};
+  base -= familyAdjust[facts.familyTag] ?? 0;
+
+  // セット割の余地（すでにset済みなら効果は乗り換え後も同様に見込める分だけ差し引き）
+  if(facts.netsetTag !== "set") base -= 300;
+  if(facts.energysetTag !== "set") base -= 100;
+
+  return Math.max(base, 850);
+}
+
+function calcCashback(){
+  // キャリア種別ごとの乗り換えキャッシュバック目安レンジ
+  const ranges = {
+    big:    [30000, 40000], // docomo実績3.5万を軸に設定
+    sub:    [40000, 50000], // UQ・Y!mobile実績4.5万を軸に設定（Y!mobileは内2.5万がPayPay）
+    online: [5000, 15000],  // 推測です（ahamo/povo/LINEMO実額は未反映）
+    mvno:   [3000, 10000],  // 推測です（格安SIM実額は未反映）
+  };
+  const [lo, hi] = ranges[facts.carrierTag] ?? [5000,15000];
+  return {lo, hi, mid: Math.round(((lo+hi)/2)/1000)*1000};
+}
+
+function renderResult(){
+  const totalPoints = answers.reduce((s,a)=>s+a.p,0);
+  const maxPoints = questions.length * 3;
+  const pct = Math.round((totalPoints/maxPoints)*100);
+
+  const targetCost = calcTargetPlan();
+  const monthlySavings = Math.max(Math.round((facts.billMid - targetCost)/100)*100, 0);
+  const yearlySavings = monthlySavings * 12;
+  const cb = calcCashback();
+  const firstYearTotal = yearlySavings + cb.mid;
+
+  // 家族全体（回線数ぶん）の合計
+  const lineCountMap = {"1":1, "2":2, "3":4, "5":5}; // "3"=3〜4人ぶんの代表値として4回線で計算
+  const lineCount = lineCountMap[facts.familyTag] ?? 1;
+  const famMonthlySavings = monthlySavings * lineCount;
+  const famYearlySavings = yearlySavings * lineCount;
+  const famCashback = cb.mid * lineCount;
+  const famFirstYearTotal = famYearlySavings + famCashback;
+
+  let rank, rankColor, title, desc, urgency;
+  if(pct >= 76){
+    rank="Sランク"; rankColor="var(--red)";
+    title="今日中に動くべきタイプ🚨";
+    desc="今の契約、放置している時間がそのままコストになってます。診断結果を見る限り、動かない理由がほぼありません。";
+    urgency="この条件だと、迷ってる1ヶ月で数千円〜1万円が消えてる計算。今日、重い腰を上げるのが一番安上がりです。";
+  } else if(pct >= 51){
+    rank="Aランク"; rankColor="var(--amber)";
+    title="今月中に動くべきタイプ⚠️";
+    desc="プラン・キャンペーンのどちらかがすでに今のあなたに合わなくなってます。今月中の見直しがおすすめ。";
+    urgency="キャッシュバックには期限があるものも多いので、検討期間を空けすぎると条件が変わることも。";
+  } else if(pct >= 26){
+    rank="Bランク"; rankColor="var(--blue)";
+    title="来月までに動くべきタイプ🔧";
+    desc="ベースはそこまで悪くないですが、セット割や家族割まわりに伸びしろがあります。";
+    urgency="今の内容でも、乗り換えるだけで受け取れるキャッシュバックはそのまま利益になります。";
+  } else {
+    rank="Cランク"; rankColor="var(--green)";
+    title="それでも動く価値ありタイプ✅";
+    desc="かなり最適化できてる方です。ただしキャッシュバックだけは「今のプランのまま」でも受け取れる可能性があります。";
+    urgency="削減額は小さくても、キャッシュバック分はまるっとプラスになります。";
+  }
+
+  const bdItems = [
+    {label:"契約タイプ・キャンペーン残存", flag:(answers[0].p+answers[2].p)>=3},
+    {label:"データ・通話プランのミスマッチ", flag:(answers[4].p+answers[5].p)>=3},
+    {label:"家族割の活用余地", flag:answers[12].p>=2},
+    {label:"セット割（ネット・電気）の未活用", flag:facts.netsetTag!=="set" || facts.energysetTag!=="set"},
+    {label:"見直し放置度", flag:(answers[18].p+answers[19].p)>=3},
+  ];
+  const bdHtml = bdItems.map(b=>`
+    <div class="bd-item">
+      <div class="ico">${b.flag ? '!' : '✓'}</div>
+      <div>${b.label}${b.flag ? '：見直しの余地あり' : '：問題なさそう'}</div>
+    </div>`).join('');
+
+  const angle = Math.PI - (pct/100)*Math.PI;
+  const cx=110, cy=100, r=80;
+  const needleX = cx + r*0.72*Math.cos(angle);
+  const needleY = cy - r*0.72*Math.sin(angle);
+  const gaugeSVG = `
+  <svg width="220" height="120" viewBox="0 0 220 120">
+    <path d="M 30 100 A 80 80 0 0 1 74 27" stroke="#12B76A" stroke-width="14" fill="none" stroke-linecap="round"/>
+    <path d="M 74 27 A 80 80 0 0 1 146 27" stroke="#FFA43D" stroke-width="14" fill="none" stroke-linecap="round"/>
+    <path d="M 146 27 A 80 80 0 0 1 190 100" stroke="#FF4D5E" stroke-width="14" fill="none" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="7" fill="${rankColor}"/>
+    <line x1="${cx}" y1="${cy}" x2="${needleX}" y2="${needleY}" stroke="${rankColor}" stroke-width="4" stroke-linecap="round"/>
+  </svg>`;
+
+  card.innerHTML = `
+    <div class="gauge-wrap">
+      ${gaugeSVG}
+      <div class="gauge-num">${pct}<span>% 乗り換え推奨度</span></div>
+    </div>
+    <div style="text-align:center;"><span class="rank-badge" style="background:${rankColor}">${rank}</span></div>
+    <div class="rank-title">${title}</div>
+    <div class="rank-desc">${desc}</div>
+
+    <div class="breakdown-title" style="margin-top:4px;">1回線あたり</div>
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="label">削減額／月</div>
+        <div class="value">${monthlySavings.toLocaleString()}<small>円</small></div>
+      </div>
+      <div class="stat-box">
+        <div class="label">削減額／年</div>
+        <div class="value">${yearlySavings.toLocaleString()}<small>円</small></div>
+      </div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="label">想定キャッシュバック</div>
+        <div class="value">${cb.lo.toLocaleString()}〜${cb.hi.toLocaleString()}<small>円</small></div>
+      </div>
+      <div class="stat-box">
+        <div class="label">現在のプラン目安</div>
+        <div class="value">${facts.billMid.toLocaleString()}<small>円/月</small></div>
+      </div>
+    </div>
+    <div class="stat-total">
+      <div class="label">1回線・初年度トータル想定メリット</div>
+      <div class="value">${firstYearTotal.toLocaleString()}<small>円</small></div>
+    </div>
+
+    ${lineCount > 1 ? `
+    <div class="breakdown-title" style="margin-top:18px;">家族全体（${lineCount}回線ぶん）</div>
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="label">削減額／月（家族計）</div>
+        <div class="value">${famMonthlySavings.toLocaleString()}<small>円</small></div>
+      </div>
+      <div class="stat-box">
+        <div class="label">削減額／年（家族計）</div>
+        <div class="value">${famYearlySavings.toLocaleString()}<small>円</small></div>
+      </div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="label">想定キャッシュバック（家族計）</div>
+        <div class="value">${famCashback.toLocaleString()}<small>円</small></div>
+      </div>
+      <div class="stat-box">
+        <div class="label">回線数</div>
+        <div class="value">${lineCount}<small>回線</small></div>
+      </div>
+    </div>
+    <div class="stat-total">
+      <div class="label">家族全体・初年度トータル想定メリット</div>
+      <div class="value">${famFirstYearTotal.toLocaleString()}<small>円</small></div>
+    </div>
+    ` : ''}
+
+    <div class="urgency-strip">${urgency}</div>
+
+    <div class="breakdown">
+      <div class="breakdown-title">チェックポイント内訳</div>
+      ${bdHtml}
+    </div>
+
+    <a class="cta" href="https://lin.ee/AsTWK4D" target="_blank" rel="noopener">LINEで診断結果を送って相談する</a>
+    <p class="cta-sub">リプ欄に「乗り換え診断」と送ってもOK。結果のスクショを送ってくれれば、あなたに合ったキャリア・プランを個別に提案します🙋‍♂️</p>
+
+    <button class="restart" onclick="renderIntro()">もう一度診断する</button>
+  `;
+}
+
+renderIntro();
+</script>
+</body>
+</html>
